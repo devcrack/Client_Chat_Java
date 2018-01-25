@@ -8,6 +8,8 @@ package my_client_app;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Arrays;
@@ -24,7 +26,7 @@ public class Client_Gui extends javax.swing.JFrame {
     private String password;
     private BufferedReader client_input;
     private PrintWriter client_output;
-    private Socket server;
+    private Socket client_socket;
     
     
     /**
@@ -156,7 +158,7 @@ public class Client_Gui extends javax.swing.JFrame {
 
     private void jButton_ConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_ConnectActionPerformed
     
-                    
+        String confirmation;
         /*GUi interaction*/
         this.server_name = this.jTextField_address.getText();
         this.user_name = this.jTextField_user_name.getText();
@@ -194,10 +196,28 @@ public class Client_Gui extends javax.swing.JFrame {
         /*Client things*/
         try {             
             this.jTextArea_Show_Messages.append("Connecting to " + this.server_name + " on port" +  this.num_port + "\n" );
-            this.server = new Socket(this.server_name, this.num_port);
-            this.jTextArea_Show_Messages.append("Connected to: " + server.getRemoteSocketAddress() + "\n");
+            this.client_socket = new Socket(this.server_name, this.num_port);
+            this.jTextArea_Show_Messages.append("Connected to: " + client_socket.getRemoteSocketAddress() + "\n");
+            
+            /*Getting the input and outputs from soc ket*/
+            this.client_input =  new BufferedReader(new InputStreamReader(this.client_socket.getInputStream()));
+            this.client_output = new PrintWriter(this.client_socket.getOutputStream(), true);
+            
+            /*Sending data of user to Server*/
+            this.client_output.println(this.user_name);
+            this.client_output.println(this.password);            
+            /*Wating confirmation from server*/
+            confirmation = this.client_input.readLine();
+            /*Checking if the confirmation was correct*/
+            if(confirmation.equals("added")) 
+                JOptionPane.showMessageDialog(this, "User Added.");
+            else {
+                JOptionPane.showMessageDialog(this, "There is something wrong Houston");
+                return;
+            }
+            this.jTextArea_Show_Messages.append("Welcome " + this.user_name);            
         }
-        catch(Exception e) {
+        catch(IOException e) {
             this.jTextArea_Show_Messages.append("\nCould not connect to Server");
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
@@ -206,6 +226,9 @@ public class Client_Gui extends javax.swing.JFrame {
       
     }//GEN-LAST:event_jButton_ConnectActionPerformed
 
+    /**
+     * @param args the command line arguments
+     */
     /**
      * @param args the command line arguments
      */
