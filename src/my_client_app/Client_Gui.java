@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 import javax.swing.JOptionPane;
 
@@ -27,7 +28,7 @@ public class Client_Gui extends javax.swing.JFrame {
     private BufferedReader client_input;
     private PrintWriter client_output;
     private Socket client_socket;
-    
+    private ArrayList<String> name_list_clients;
     
     /**
      * Creates new form Client_Gui
@@ -220,12 +221,11 @@ public class Client_Gui extends javax.swing.JFrame {
         catch(IOException e) {
             this.jTextArea_Show_Messages.append("\nCould not connect to Server");
             JOptionPane.showMessageDialog(this, e.getMessage());
-        }
-        
-        
-      
+        }                      
     }//GEN-LAST:event_jButton_ConnectActionPerformed
 
+    
+    
     /**
      * @param args the command line arguments
      */
@@ -263,7 +263,28 @@ public class Client_Gui extends javax.swing.JFrame {
             }
         });
     }
-
+    
+    /**
+     Inner Class for read the incoming messages
+     */
+    class Read extends Thread {
+        String message;
+        
+        public void run(){
+            while(true) {
+                try {
+                    this.message = client_input.readLine();
+                    if(message.indexOf('$') == 0) { //If this character is to the begining then is a user_name
+                        name_list_clients.add(this.message);
+                    }
+                }
+                catch (Exception e) {
+                    
+                }
+            }
+        }
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton_Connect;
     private javax.swing.JButton jButton_Send_Message;
