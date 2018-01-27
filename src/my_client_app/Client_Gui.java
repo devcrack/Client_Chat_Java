@@ -8,6 +8,7 @@ package my_client_app;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Arrays;
@@ -24,7 +25,7 @@ public class Client_Gui extends javax.swing.JFrame {
     private String password;
     private BufferedReader client_input;
     private PrintWriter client_output;
-    private Socket server;
+    private Socket client_socket;
     
     
     /**
@@ -193,10 +194,12 @@ public class Client_Gui extends javax.swing.JFrame {
 
         /*Client things*/
         try {             
-            this.jTextArea_Show_Messages.append("Connecting to " + this.server_name + " on port" +  this.num_port + "\n" );
-            this.server = new Socket(this.server_name, this.num_port);
-            this.jTextArea_Show_Messages.append("Connected to: " + server.getRemoteSocketAddress() + "\n");
+            this.jTextArea_Show_Messages.append("Connecting to " + this.server_name + " on port" +  Client_Gui.num_port + "\n" );
+            this.client_socket = new Socket(this.server_name, Client_Gui.num_port);
+            this.jTextArea_Show_Messages.append("Connected to: " + client_socket.getRemoteSocketAddress() + "\n");
+            this.client_input = new BufferedReader(new InputStreamReader(this.client_socket.getInputStream()));
         }
+        /*The conection have failed*/
         catch(Exception e) {
             this.jTextArea_Show_Messages.append("\nCould not connect to Server");
             JOptionPane.showMessageDialog(this, e.getMessage());
