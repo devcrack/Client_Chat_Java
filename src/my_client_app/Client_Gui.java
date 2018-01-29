@@ -29,8 +29,7 @@ public class Client_Gui extends javax.swing.JFrame {
     private BufferedReader client_input;
     private PrintWriter client_output;
     private Socket client_socket;
-    private ArrayList<String> name_list_clients;
-    
+    private ArrayList<String> name_list_clients;//Esto fue en el ultimo commit 
     /**
      * Creates new form Client_Gui
      */
