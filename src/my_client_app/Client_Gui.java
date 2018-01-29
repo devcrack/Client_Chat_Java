@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 
 /**
@@ -36,7 +37,7 @@ public class Client_Gui extends javax.swing.JFrame {
     public Client_Gui() {
         this.server_name = "localhost";
         this.num_port = 7520;
-        
+        this.name_list_clients = new ArrayList<String>();
         initComponents();
     }
 
@@ -157,6 +158,7 @@ public class Client_Gui extends javax.swing.JFrame {
             this.jLabel_users.setVisible(false);
     }//GEN-LAST:event_formWindowOpened
 
+    
     private void jButton_ConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_ConnectActionPerformed
     
         String confirmation;
@@ -216,7 +218,12 @@ public class Client_Gui extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "There is something wrong Houston");
                 return;
             }
-            this.jTextArea_Show_Messages.append("Welcome " + this.user_name);            
+            /*Simple message*/
+            this.jTextArea_Show_Messages.append("Welcome " + this.user_name);
+            
+            Thread read_client = new Read();
+            
+            read_client.start();
         }
         catch(IOException e) {
             this.jTextArea_Show_Messages.append("\nCould not connect to Server");
@@ -264,9 +271,8 @@ public class Client_Gui extends javax.swing.JFrame {
         });
     }
     
-    /**
-     Inner Class for read the incoming messages
-     */
+    /*###############################<INNER CLASS>############################*/
+    
     class Read extends Thread {
         String message;
         
@@ -276,10 +282,12 @@ public class Client_Gui extends javax.swing.JFrame {
                     this.message = client_input.readLine();
                     if(message.indexOf('$') == 0) { //If this character is to the begining then is a user_name
                         name_list_clients.add(this.message);
+                        jComboBox_Users.removeAllItems();
+                        jComboBox_Users.setModel(new DefaultComboBoxModel(name_list_clients.toArray()));                        
                     }
+                    jTextArea_Show_Messages.append(message);
                 }
-                catch (Exception e) {
-                    
+                catch (Exception e) {                          
                 }
             }
         }
