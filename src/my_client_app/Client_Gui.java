@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 
 /**
@@ -35,8 +36,11 @@ public class Client_Gui extends javax.swing.JFrame {
     public Client_Gui() {
         this.server_name = "localhost";
         this.num_port = 7520;
-        
+        this.name_list_clients = new ArrayList<String>();
+        this.name_list_clients.add("$All");
         initComponents();
+        jComboBox_Users.removeAllItems();
+        jComboBox_Users.setModel(new DefaultComboBoxModel(name_list_clients.toArray()));
     }
 
     /**
@@ -62,6 +66,9 @@ public class Client_Gui extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
             }
@@ -90,8 +97,18 @@ public class Client_Gui extends javax.swing.JFrame {
         jScrollPane2.setViewportView(jTextArea_Editable);
 
         jButton_Send_Message.setText("Send");
+        jButton_Send_Message.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton_Send_MessageActionPerformed(evt);
+            }
+        });
 
         jComboBox_Users.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jComboBox_Users.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jComboBox_UsersItemStateChanged(evt);
+            }
+        });
 
         jLabel_users.setText("Send to User:");
 
@@ -133,7 +150,7 @@ public class Client_Gui extends javax.swing.JFrame {
                     .addComponent(jButton_Connect)
                     .addComponent(jPassword_Field, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 110, Short.MAX_VALUE)
                 .addGap(3, 3, 3)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel_users)
@@ -215,7 +232,9 @@ public class Client_Gui extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "There is something wrong Houston");
                 return;
             }
-            this.jTextArea_Show_Messages.append("Welcome " + this.user_name);            
+            this.jTextArea_Show_Messages.append("Welcome " + this.user_name + "\n");     
+            Thread client_read = new Read(this.user_name);
+            client_read.start();
         }
         catch(IOException e) {
             this.jTextArea_Show_Messages.append("\nCould not connect to Server");
@@ -223,11 +242,40 @@ public class Client_Gui extends javax.swing.JFrame {
         }                      
     }//GEN-LAST:event_jButton_ConnectActionPerformed
 
+    private void jButton_Send_MessageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_Send_MessageActionPerformed
+        // TODO add your handling code here:       
+        this.send_message(jComboBox_Users.getSelectedItem().toString());
+        this.jTextArea_Editable.setText("");
+    }//GEN-LAST:event_jButton_Send_MessageActionPerformed
+
+    
+    private void jComboBox_UsersItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBox_UsersItemStateChanged
+        // TODO add your handling code here:
+        int is_here = 0;
+    }//GEN-LAST:event_jComboBox_UsersItemStateChanged
+
     
     
-    /**
-     * @param args the command line arguments
-     */
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        // TODO add your handling code here:
+        this.client_output.println("~<N!_/_!D>~" + " left");
+        System.exit(0);
+    }//GEN-LAST:event_formWindowClosing
+
+    private void send_message(String to_who) {                
+        try {
+            String message_send = this.user_name + ":" + jTextArea_Editable.getText().trim();
+            if(message_send.equals(""))
+                return;            
+            /*Adding message to show messages text area*/
+            jTextArea_Show_Messages.append("\n" + "Yo : " + jTextArea_Editable.getText().trim());           
+            this.client_output.println(message_send + ":" + to_who.trim());
+        }
+        catch(Exception e){
+            
+        }
+    }
+  
     /**
      * @param args the command line arguments
      */
@@ -268,14 +316,36 @@ public class Client_Gui extends javax.swing.JFrame {
      */
     class Read extends Thread {
         String message;
+        String name_user;
+        String user_nme_tmp;
+        /*
+        Simple Constructor
+        */
+        Read(String client_name) {
+            this.name_user = client_name;
+        }
         
         public void run(){
             while(true) {
-                try {
+                try {   
                     this.message = client_input.readLine();
-                    if(message.indexOf('$') == 0) { //If this character is to the begining then is a user_name
-                        name_list_clients.add(this.message);
+                    if(message.indexOf('$') == 0) { //if is this ($) the lead character then means that a new user going to be insert
+                        this.user_nme_tmp = this.message.substring(1);
+                        if(!name_list_clients.contains(this.user_nme_tmp)) {                           
+                            if(this.user_nme_tmp.compareTo(this.name_user)!= 0)
+                                name_list_clients.add(this.user_nme_tmp);
+                        }
+                        jComboBox_Users.removeAllItems();
+                        jComboBox_Users.setModel(new DefaultComboBoxModel(name_list_clients.toArray()));
                     }
+                    else if(message.indexOf("%") == 0){ //If is this(%) the lead character then means that a user must be to be kicked out from list.
+                        this.user_nme_tmp = this.message.substring(1);
+                        name_list_clients.remove(this.user_nme_tmp);
+                        jComboBox_Users.removeAllItems();
+                        jComboBox_Users.setModel(new DefaultComboBoxModel(name_list_clients.toArray()));
+                    }
+                    else //If its not none of previous then, is just a message                        
+                        jTextArea_Show_Messages.append("\n" + message);                        
                 }
                 catch (Exception e) {
                     
